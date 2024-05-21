@@ -25,7 +25,11 @@ SOURCES += \
     widget.cpp \
     networkdata.cpp \
     networkserver.cpp \
-    networksocket.cpp
+    networksocket.cpp \
+    surakarta_rule_manager.cpp \
+    surakarta_agent_mine.cpp \
+    surakarta_agent_random.cpp \
+    eve_game.cpp
 
 HEADERS += \
     Client.h \
@@ -43,7 +47,14 @@ HEADERS += \
     widget.h \
     networkdata.h \
     networkserver.h \
-    networksocket.h
+    networksocket.h \
+    surakarta_agent_base.h \
+    surakarta_rule_manager.h \
+    surakarta_agent_mine.h \
+    surakarta_agent_random.h \
+    global_random_generator.h \
+    surakarta_board.h \
+    eve_game.h
 
 FORMS += \
     clock.ui \

@@ -5,10 +5,12 @@
 #include<QMouseEvent>
 #include<cmath>
 #include<QMessageBox>
+#include "surakarta_agent_mine.h"
 
-Widget::Widget(QWidget *parent)
+Widget::Widget(QWidget *parent, bool enable_ai)
     : QFrame(parent)
     , ui(new Ui::Widget)
+    , enable_ai(enable_ai)
 {
     ui->setupUi(this);
 
@@ -21,7 +23,7 @@ Widget::Widget(QWidget *parent)
 
     NCMCR=0;
 
-    gameinfo.current_player_=PieceColor::BLACK;
+    gameinfo.current_player_=PieceColor::BLACK;//should be change after network
 }
 
 Widget::~Widget()
@@ -539,7 +541,6 @@ void Widget::mouseReleaseEvent(QMouseEvent *ev)
         selected_id=QPoint_to_ID(pt);
         update();
     }//只能选中棋子
-
     //再次点击，涉及棋子移动
     else
     {
@@ -550,7 +551,6 @@ void Widget::mouseReleaseEvent(QMouseEvent *ev)
             update();
             return;
         }//再次点击会取消选中
-
         //不吃子
         if(!isPiece(pt))
         {
@@ -561,12 +561,152 @@ void Widget::mouseReleaseEvent(QMouseEvent *ev)
             to_x=pos_to.x;
             to_y=pos_to.y;
             if(abs(to_x-from_x)>1||abs(to_y-from_y)>1) return;//不在走棋范围内
+        }
+        //吃子
+        if(isPiece(pt))
+        {
+            if(Piece[QPoint_to_ID(pt)].GetColor()==Piece[selected_id].GetColor())
+            {
+                selected_id=QPoint_to_ID(pt);//改变选中子
+                update();
+                return; //不能吃自己的子
+            }
+        }
+        move(selected_id,pt);
+        selected_id=-1;
+
+        //ai:
+        if(enable_ai)
+        {
+            auto board_temp = std::make_shared<SurakartaBoard> (BOARD_SIZE);
+            for(int x=0; x<BOARD_SIZE; x++){
+                for(int y=0; y<BOARD_SIZE; y++){
+                    (*board_temp)[x][y] = std::make_shared<SurakartaPiece>();
+                }
+            }
+            for(int i=0; i<4*BOARD_SIZE; i++){
+                if(Piece[i]._isdead()==false){
+                    auto position = Piece[i].GetPosition();
+                    auto color = Piece[i].GetColor();
+                    (*board_temp)[position.x][position.y]->SetColor(color);
+                }
+            }
+            auto game_info = std::make_shared<SurakartaGameInfo>();
+            *game_info = gameinfo;
+            auto rule_manager = std::make_shared<SurakartaRuleManager>(board_temp, game_info);
+
+            SurakartaAgentMine agent(board_temp, game_info, rule_manager);
+            auto move = agent.CalculateMove();
+
+            this->move(QPoint_to_ID(SPosition_to_QPoint(move.from)), SPosition_to_QPoint(move.to));
+        }
+    }
+}
+void Widget::move(int from_id,QPoint pt)
+{
+    //不吃子
+    if(!isPiece(pt))
+    {
+        SurakartaPosition pos_to=QPoint_to_SPosition(pt);
+        int from_x,from_y,to_x,to_y;
+        from_x=Piece[from_id].GetPosition().x;
+        from_y=Piece[from_id].GetPosition().y;
+        to_x=pos_to.x;
+        to_y=pos_to.y;
+        if(abs(to_x-from_x)>1||abs(to_y-from_y)>1) return;//不在走棋范围内
+
+        //移动棋子
+        Piece[from_id].SetPosition(QPoint_to_SPosition(pt));
+
+        //释放选中
+        from_id=-1;
+
+        //更换current_player_
+        if(gameinfo.current_player_==PieceColor::BLACK)
+        {
+            gameinfo.current_player_=PieceColor::WHITE;
+            emit Player_White();
+        }
+        else
+        {
+            gameinfo.current_player_=PieceColor::BLACK;
+            emit Player_Black();
+        }
+        update();
+
+        NCMCR++;
+        if(NCMCR>NCMCR_MAX)
+        {
+            int white_living=0,black_living=0;
+            for(int i=0;i<PieceNum/2;i++)
+            {
+                if(!Piece[i]._isdead())
+                    white_living++;
+            }
+            for(int i=PieceNum/2;i<PieceNum;i++)
+            {
+                if(!Piece[i]._isdead())
+                    black_living++;
+            }
+            if(white_living>black_living)
+            {
+                QMessageBox message(QMessageBox::Information,"对局结束","白方胜！",QMessageBox::Yes|QMessageBox::No,NULL);
+                message.setButtonText(QMessageBox::Yes,"再来一局");
+                message.setButtonText(QMessageBox::No,"退出游戏");
+                messagefunc(message);
+            }
+            else if(white_living<black_living)
+            {
+                QMessageBox message(QMessageBox::Information,"对局结束","黑方胜！",QMessageBox::Yes|QMessageBox::No,NULL);
+                message.setButtonText(QMessageBox::Yes,"再来一局");
+                message.setButtonText(QMessageBox::No,"退出游戏");
+                messagefunc(message);
+            }
+            else
+            {
+                QMessageBox message(QMessageBox::Information,"对局结束","平局！",QMessageBox::Yes|QMessageBox::No,NULL);
+                message.setButtonText(QMessageBox::Yes,"再来一局");
+                message.setButtonText(QMessageBox::No,"退出游戏");
+                messagefunc(message);
+            }
+        }
+
+
+        return;
+    }
+
+    //吃子
+    if(isPiece(pt))
+    {
+        if(Piece[QPoint_to_ID(pt)].GetColor()==Piece[from_id].GetColor())
+        {
+            from_id=QPoint_to_ID(pt);//改变选中子
+            update();
+            return; //不能吃自己的子
+        }
+
+        SurakartaMove move(Piece[from_id].GetPosition(),QPoint_to_SPosition(pt),gameinfo.current_player_);
+
+        if(Judge_capture_move(move))
+        {
+            //对方棋子死亡
+            Piece[QPoint_to_ID(pt)].dead();
+
 
             //移动棋子
-            Piece[selected_id].SetPosition(QPoint_to_SPosition(pt));
+            Piece[from_id].SetPosition(QPoint_to_SPosition(pt));
 
             //释放选中
-            selected_id=-1;
+            // from_id=-1;
+
+            NCMCR=0;//连续不吃子的轮数清零
+
+            update();
+
+            if(Game_is_over())
+            {
+                return;
+            }
 
             //更换current_player_
             if(gameinfo.current_player_==PieceColor::BLACK)
@@ -579,100 +719,11 @@ void Widget::mouseReleaseEvent(QMouseEvent *ev)
                 gameinfo.current_player_=PieceColor::BLACK;
                 emit Player_Black();
             }
-            update();
-
-            NCMCR++;
-            if(NCMCR>NCMCR_MAX)
-            {
-                int white_living=0,black_living=0;
-                for(int i=0;i<PieceNum/2;i++)
-                {
-                    if(!Piece[i]._isdead())
-                        white_living++;
-                }
-                for(int i=PieceNum/2;i<PieceNum;i++)
-                {
-                    if(!Piece[i]._isdead())
-                        black_living++;
-                }
-                if(white_living>black_living)
-                {
-                    QMessageBox message(QMessageBox::Information,"对局结束","白方胜！",QMessageBox::Yes|QMessageBox::No,NULL);
-                    message.setButtonText(QMessageBox::Yes,"再来一局");
-                    message.setButtonText(QMessageBox::No,"退出游戏");
-                    messagefunc(message);
-                }
-                else if(white_living<black_living)
-                {
-                    QMessageBox message(QMessageBox::Information,"对局结束","黑方胜！",QMessageBox::Yes|QMessageBox::No,NULL);
-                    message.setButtonText(QMessageBox::Yes,"再来一局");
-                    message.setButtonText(QMessageBox::No,"退出游戏");
-                    messagefunc(message);
-                }
-                else
-                {
-                    QMessageBox message(QMessageBox::Information,"对局结束","平局！",QMessageBox::Yes|QMessageBox::No,NULL);
-                    message.setButtonText(QMessageBox::Yes,"再来一局");
-                    message.setButtonText(QMessageBox::No,"退出游戏");
-                    messagefunc(message);
-                }
-            }
-
 
             return;
         }
-
-        //吃子
-        if(isPiece(pt))
-        {
-            if(Piece[QPoint_to_ID(pt)].GetColor()==Piece[selected_id].GetColor())
-            {
-                selected_id=QPoint_to_ID(pt);//改变选中子
-                update();
-                return; //不能吃自己的子
-            }
-
-            SurakartaMove move(Piece[selected_id].GetPosition(),QPoint_to_SPosition(pt),gameinfo.current_player_);
-
-            if(Judge_capture_move(move))
-            {
-                //对方棋子死亡
-                Piece[QPoint_to_ID(pt)].dead();
-
-
-                //移动棋子
-                Piece[selected_id].SetPosition(QPoint_to_SPosition(pt));
-
-                //释放选中
-                selected_id=-1;
-
-                NCMCR=0;//连续不吃子的轮数清零
-
-                update();
-
-                if(Game_is_over())
-                {
-                    return;
-                }
-
-                //更换current_player_
-                if(gameinfo.current_player_==PieceColor::BLACK)
-                {
-                    gameinfo.current_player_=PieceColor::WHITE;
-                    emit Player_White();
-                }
-                else
-                {
-                    gameinfo.current_player_=PieceColor::BLACK;
-                    emit Player_Black();
-                }
-
-                return;
-            }
-        }
     }
 }
-
 bool Widget::Game_is_over()
 {
     if(gameinfo.current_player_==PieceColor::BLACK)//黑棋吃完子后，判断白棋死光了没
