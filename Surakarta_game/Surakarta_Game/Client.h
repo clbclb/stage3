@@ -17,6 +17,7 @@ class Client : public QWidget
 {
    Q_OBJECT
 public:
+   bool black,flag=0;
    NetworkSocket *socket;
    explicit Client(QWidget *parent = nullptr);
     ~Client();
@@ -53,6 +54,7 @@ private:
 signals:
     void Player_Black();
     void Player_White();
+    void ip_reset();
 
 public slots:
     // void slotBack();
@@ -60,10 +62,13 @@ public slots:
     void slot_panel_button2_Clicked();
     // void slot_panel_button3_Clicked();
     // void slot_timeout();
+    void initgame();
 public:
     QString new_ip="127.0.0.1";
+    quint64 new_port=10086;
 private slots:
     void on_pushButton_clicked();
+    void on_label_destroyed();
 };
 
 #endif // CLIENT_H

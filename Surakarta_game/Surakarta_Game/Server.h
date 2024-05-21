@@ -15,6 +15,8 @@ class Server : public QWidget
 {
     Q_OBJECT
 public:
+    QString dep;
+    int len;char ans[5100];
     NetworkServer* server;
     explicit Server(QWidget *parent = nullptr);
     ~Server();

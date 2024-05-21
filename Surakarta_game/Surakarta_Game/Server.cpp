@@ -6,6 +6,7 @@
 Server::Server(QWidget *parent)
     :QWidget{parent},ui(new Ui::Server)
 {
+    dep="";
     ui->setupUi(this);
     _white=NULL;
     _black=NULL;
@@ -47,7 +48,7 @@ int Server::judgeend(){
             if(color[i][j]==PieceColor::BLACK)
                 exist_black=1;
     if(!exist_black)return 2;
-    if(move_with_no_eat>4)return 3;
+    if(move_with_no_eat>80)return 3;
     return 4;
 }
 
@@ -89,6 +90,10 @@ void Server::receiveData(QTcpSocket* client, NetworkData data){
         }
     }
     else if(data.op==OPCODE::MOVE_OP){
+        dep+=data.data1;
+        dep+="-";
+        dep+=data.data2;
+        dep+=" ";
         int frx=qchar_to_int(data.data1[0]);
         int fry=qchar_to_int(data.data1[1]);
         int tx=qchar_to_int(data.data2[0]);
@@ -112,18 +117,21 @@ void Server::receiveData(QTcpSocket* client, NetworkData data){
                 //black eat all white
                 server->send(_white,NetworkData(OPCODE::END_OP,"","CHECKMATE","BLACK"));
                 server->send(_black,NetworkData(OPCODE::END_OP,"","CHECKMATE","BLACK"));
+                dep+="#C";
                 restart_game();
             }
             else if(tt==2){
                 //white eat all black
                 server->send(_white,NetworkData(OPCODE::END_OP,"","CHECKMATE","WHITE"));
                 server->send(_black,NetworkData(OPCODE::END_OP,"","CHECKMATE","WHITE"));
+                dep+="#C";
                 restart_game();
             }
             else if(tt==3){
                 //no capture move
                 server->send(_white,NetworkData(OPCODE::END_OP,"","","NONE"));
                 server->send(_black,NetworkData(OPCODE::END_OP,"","","NONE"));
+                dep+="#S";
                 restart_game();
             }
             else{
@@ -132,6 +140,13 @@ void Server::receiveData(QTcpSocket* client, NetworkData data){
         }
         else{
             //end
+            QString winner;
+            if(current_player=="WHITE")winner="BLACK";
+            else winner="WHITE";
+            server->send(_white,NetworkData(OPCODE::END_OP,"","",winner));
+            server->send(_black,NetworkData(OPCODE::END_OP,"","",winner));
+            dep+="#S";
+            restart_game();
         }
     }
     else if(data.op==OPCODE::LEAVE_OP){
@@ -146,11 +161,24 @@ void Server::receiveData(QTcpSocket* client, NetworkData data){
             server->send(_white,NetworkData(OPCODE::END_OP,"","RESIGN","WHITE"));
             server->send(_black,NetworkData(OPCODE::END_OP,"","RESIGN","WHITE"));
         }
+        dep+="#R";
         restart_game();
     }
 }
 
 void Server::restart_game(){
+    // len=0;
+    // for(int i=0;i<dep.length();i++){
+    //     char now=dep[i].toLatin1();
+    //     qDebug()<<" "<<now;
+    //     ans[++len]=now;
+    // }
+    QFile myfile("Team1.txt");
+    if(myfile.open(QFile::WriteOnly|QFile::Truncate)){
+        QTextStream out(&myfile);
+        out<<dep<<Qt::endl<<QObject::tr("go on");
+    }
+    dep="";
     _white=NULL;
     _black=NULL;
     current_player="BLACK";
