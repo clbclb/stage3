@@ -31,11 +31,12 @@ public:
     QString pos_to_data(int x,int y);
     const int dx[4]={0,0,-1,1};
     const int dy[4]={-1,1,0,0};
-    bool check(int x,int y,int dir,int dep,int edx,int edy,bool bk);
+    bool check(int x,int y,int dir,int edx,int edy,bool bk);
     int qchar_to_int(QChar ss);
     int judgeend();
+    void restart_game();
 
-    int move_with_no_eat=0;
+    int move_with_no_eat;
 
 public slots:
     void receiveData(QTcpSocket* client, NetworkData data);

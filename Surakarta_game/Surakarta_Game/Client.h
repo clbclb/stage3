@@ -6,6 +6,10 @@
 #include<surakarta_piece.h>
 #include<QMouseEvent>
 
+//namespace Ui {
+//class Client;
+//}
+
 class Client : public QWidget
 {
    Q_OBJECT
@@ -33,8 +37,12 @@ public:
    QString pos_to_data(int x,int y);
    const int dx[4]={0,0,-1,1};
    const int dy[4]={-1,1,0,0};
-   bool check(int x,int y,int dir,int dep,int edx,int edy,bool bk);
+   bool check(int x,int y,int dir,int edx,int edy,bool bk);
    int qchar_to_int(QChar ss);
+   void messagefunc(QMessageBox &message);
+
+private:
+    //Ui::Client *ui;
 
 public slots:
     void receiveData(NetworkData data);
