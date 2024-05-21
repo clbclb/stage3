@@ -2,14 +2,15 @@
 #include<QMessageBox>
 #include<QPainter>
 #include<surakarta_piece.h>
-//#include "ui_Client.h"
 #include "Client.h"
 #include<QWidget>
+#include <QVBoxLayout>
+#include "ui_Client.h"
 
 Client::Client(QWidget *parent)
-    :QWidget{parent}//,ui(new Ui::Client)
+    :QWidget{parent}, ui(new Ui::Client)
 {
-    //ui->setupUi(this);
+    ui->setupUi(this);
     QMessageBox::StandardButton ret;
     ret=QMessageBox::question(NULL,"white or black", "你是否想成为黑方（先手）");
     bool black=0;
@@ -46,7 +47,7 @@ isblack your_turn
 }
 
 Client::~Client(){
-
+    delete ui;
 }
 
 void Client::receiveData(NetworkData data){
@@ -61,6 +62,7 @@ void Client::receiveData(NetworkData data){
             your_turn=1;
             QMessageBox::about(this,"color","you become black player");
         }
+        emit Player_Black();
     }
     else if(data.op==OPCODE::MOVE_OP){
         int frx,fry,tx,ty;
@@ -314,6 +316,14 @@ void Client::makemove(int frx,int fry,int tx,int ty){
     color[frx][fry]=PieceColor::NONE;
     your_turn^=1;
     update();
+    if(your_turn){
+        if(isblack)emit Player_Black();
+        else emit Player_White();
+    }
+    else{
+        if(!isblack)emit Player_Black();
+        else emit Player_White();
+    }
 }
 
 bool Client::judgemove(int frx,int fry,int tx,int ty){
@@ -361,3 +371,15 @@ bool Client::check(int x,int y,int dir,int edx,int edy,bool bk){
     }
     return 0;
 }
+
+void Client::slot_panel_button2_Clicked(){
+    if(your_turn){
+        socket->send(NetworkData(OPCODE::RESIGN_OP,"","",""));
+    }
+}
+
+void Client::on_pushButton_clicked()
+{
+    new_ip=ui->textEdit->toPlainText();
+}
+

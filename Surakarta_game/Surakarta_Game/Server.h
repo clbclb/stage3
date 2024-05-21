@@ -5,6 +5,12 @@
 #include<networkserver.h>
 #include<networksocket.h>
 
+QT_BEGIN_NAMESPACE
+namespace Ui {
+class Server;
+}
+QT_END_NAMESPACE
+
 class Server : public QWidget
 {
     Q_OBJECT
@@ -38,9 +44,14 @@ public:
 
     int move_with_no_eat;
 
+signals:
+    void Player_Black();
+    void Player_White();
 public slots:
     void receiveData(QTcpSocket* client, NetworkData data);
     void slotNewConnection();
+private:
+    Ui::Server* ui;
 };
 
 #endif // SERVER_H

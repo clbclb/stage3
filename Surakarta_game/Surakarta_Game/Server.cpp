@@ -1,10 +1,12 @@
 #include<Server.h>
 #include<networkdata.h>
 #include<QPainter>
+#include"ui_Server.h"
 
 Server::Server(QWidget *parent)
-    :QWidget{parent}
+    :QWidget{parent},ui(new Ui::Server)
 {
+    ui->setupUi(this);
     _white=NULL;
     _black=NULL;
     move_with_no_eat=0;
@@ -25,7 +27,7 @@ Server::Server(QWidget *parent)
 }
 
 Server::~Server(){
-
+    delete ui;
 }
 
 void Server::slotNewConnection(){
@@ -83,6 +85,7 @@ void Server::receiveData(QTcpSocket* client, NetworkData data){
             }
             server->send(_white,NetworkData(OPCODE::READY_OP,_black_name,"BLACK",room_id));
             server->send(_black,NetworkData(OPCODE::READY_OP,_white_name,"WHITE",room_id));
+            emit Player_Black();
         }
     }
     else if(data.op==OPCODE::MOVE_OP){
@@ -96,8 +99,14 @@ void Server::receiveData(QTcpSocket* client, NetworkData data){
             makemove(frx,fry,tx,ty);
             server->send(_white,NetworkData(OPCODE::MOVE_OP,pos_to_data(frx,fry),pos_to_data(tx,ty),""));
             server->send(_black,NetworkData(OPCODE::MOVE_OP,pos_to_data(frx,fry),pos_to_data(tx,ty),""));
-            if(current_player=="BLACK")current_player="WHITE";
-            else current_player="BLACK";
+            if(current_player=="BLACK"){
+                current_player="WHITE";
+                emit Player_White();
+            }
+            else{
+                current_player="BLACK";
+                emit Player_Black();
+            }
             int tt=judgeend();
             if(tt==1){
                 //black eat all white
@@ -127,6 +136,17 @@ void Server::receiveData(QTcpSocket* client, NetworkData data){
     }
     else if(data.op==OPCODE::LEAVE_OP){
 
+    }
+    else if(data.op==OPCODE::RESIGN_OP){
+        if(_white==client){
+            server->send(_white,NetworkData(OPCODE::END_OP,"","RESIGN","BLACK"));
+            server->send(_black,NetworkData(OPCODE::END_OP,"","RESIGN","BLACK"));
+        }
+        else{
+            server->send(_white,NetworkData(OPCODE::END_OP,"","RESIGN","WHITE"));
+            server->send(_black,NetworkData(OPCODE::END_OP,"","RESIGN","WHITE"));
+        }
+        restart_game();
     }
 }
 

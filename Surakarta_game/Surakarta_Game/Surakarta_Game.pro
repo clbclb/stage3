@@ -12,7 +12,7 @@ CONFIG += c++17
 
 SOURCES += \
     Client.cpp \
-    Server.cpp \
+    Server.cpp\
     choose_dialog.cpp \
     clock.cpp \
     ctrlpanel.cpp \
@@ -29,7 +29,7 @@ SOURCES += \
 
 HEADERS += \
     Client.h \
-    Server.h \
+    Server.h\
     choose_dialog.h \
     clock.h \
     ctrlpanel.h \
@@ -48,6 +48,8 @@ HEADERS += \
 FORMS += \
     clock.ui \
     widget.ui \
+    Client.ui \
+    Server.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

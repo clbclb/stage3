@@ -5,10 +5,13 @@
 #include<networksocket.h>
 #include<surakarta_piece.h>
 #include<QMouseEvent>
+#include"ctrlpanel.h"
 
-//namespace Ui {
-//class Client;
-//}
+QT_BEGIN_NAMESPACE
+namespace Ui {
+class Client;
+}
+QT_END_NAMESPACE
 
 class Client : public QWidget
 {
@@ -18,6 +21,7 @@ public:
    explicit Client(QWidget *parent = nullptr);
     ~Client();
    bool isblack,your_turn;
+   class CtrlPanel* _ctrlpanel;
 
    void paintEvent(QPaintEvent *);
    void drawPiece(QPainter &painter,int x,int y);
@@ -41,11 +45,25 @@ public:
    int qchar_to_int(QChar ss);
    void messagefunc(QMessageBox &message);
 
-private:
-    //Ui::Client *ui;
-
 public slots:
     void receiveData(NetworkData data);
+private:
+    Ui::Client *ui;
+
+signals:
+    void Player_Black();
+    void Player_White();
+
+public slots:
+    // void slotBack();
+    // void slot_panel_button0_Clicked();
+    void slot_panel_button2_Clicked();
+    // void slot_panel_button3_Clicked();
+    // void slot_timeout();
+public:
+    QString new_ip="127.0.0.1";
+private slots:
+    void on_pushButton_clicked();
 };
 
 #endif // CLIENT_H
