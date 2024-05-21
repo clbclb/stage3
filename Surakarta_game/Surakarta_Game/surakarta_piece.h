@@ -4,7 +4,7 @@
 #define SURAKARTAPIECE_H
 
 #define BOARD_SIZE 6
-
+#include<iostream>
 using PieceColorMemoryType = int;
 enum class PieceColor : PieceColorMemoryType { BLACK,
                                                WHITE,
@@ -37,7 +37,43 @@ struct SurakartaPosition {
         return !(*this == rhs);
     }
 };
+inline std::ostream& operator<<(std::ostream& os, const PieceColor& color) {
+    switch (color) {
+    case PieceColor::NONE:
+        os << ".";
+        break;
+    case PieceColor::BLACK:
+        os << "B";
+        break;
+    case PieceColor::WHITE:
+        os << "W";
+        break;
+    default:
+        os << "?";
+        break;
+    }
+    return os;
+}
 
+inline std::istream& operator>>(std::istream& is, PieceColor& color) {
+    char ch;
+    is >> ch;
+    switch (ch) {
+    case '.':
+        color = PieceColor::NONE;
+        break;
+    case 'B':
+        color = PieceColor::BLACK;
+        break;
+    case 'W':
+        color = PieceColor::WHITE;
+        break;
+    default:
+        color = PieceColor::UNKNOWN;
+        break;
+    }
+    return is;
+}
 class SurakartaPiece {
 public:
     SurakartaPiece()
@@ -74,11 +110,16 @@ public:
     PieceColor GetColor() const { return color_; }
 
 
- //private:
+    //private:
     int id;
     SurakartaPosition position_;
     PieceColor color_;
     bool isdead;
+    friend std::ostream& operator<<(std::ostream& os, const SurakartaPiece& piece) {
+        os << piece.color_;
+        return os;
+    }
 };
+
 
 #endif // SURAKARTAPIECE_H

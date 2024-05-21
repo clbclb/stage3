@@ -19,7 +19,7 @@ class Widget : public QFrame
     Q_OBJECT
 
 public:
-    Widget(QWidget *parent = nullptr);
+    Widget(QWidget *parent = nullptr, bool enable_ai = false);
 
     ~Widget();
 
@@ -37,7 +37,9 @@ public:
 
     void paintEvent(QPaintEvent *);
 
-    virtual void mouseReleaseEvent(QMouseEvent *);
+    void mouseReleaseEvent(QMouseEvent *);
+
+    void AI_move_event();
 
     bool isPiece(QPoint);
 
@@ -59,6 +61,10 @@ public:
 
     bool Game_is_over();
 
+    void move(int,QPoint);
+
+    void AI_GO();
+
     void messagefunc(QMessageBox &messagebox);
 
 private:
@@ -78,6 +84,8 @@ private:
     SurakartaGameInfo gameinfo;
     int NCMCR; //连续不吃子的轮数
 
+    bool enable_ai;
+
 signals:
     void Player_Black();
     void Player_White();
@@ -89,5 +97,6 @@ public slots:
     void slot_panel_button3_Clicked();
     void slot_timeout();
 };
+
 
 #endif // WIDGET_H
