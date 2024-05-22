@@ -27,7 +27,7 @@ Server::Server(QWidget *parent)
         ui->pushButton->hide();
         ui->textEdit->hide();
         server=new NetworkServer(this);
-        server->listen(QHostAddress::Any,1);
+        server->listen(QHostAddress::Any,new_port);
         connect(server, &NetworkServer::newConnection, this, &Server::slotNewConnection);
         connect(server, &NetworkServer::receive, this, &Server::receiveData);
         current_player="BLACK";
@@ -182,6 +182,7 @@ void Server::restart_game(){
         qDebug()<<" "<<now;
         ans[len++]=now;
     }
+    ans[len]=0;
     emit prt();
     dep="";
     _white=NULL;
@@ -275,8 +276,8 @@ bool Server::judgemove(int frx,int fry,int tx,int ty){
     if(frx==tx&&fry==ty)return 0;
     if(frx<0||frx>=6||fry<0||fry>=6)return 0;
     if(tx<0||tx>=6||ty<0||ty>=6)return 0;
-
-    if(color[frx][fry]==PieceColor::NONE)return 0;
+    PieceColor pd=current_player=="WHITE"?PieceColor::WHITE:PieceColor::BLACK;
+    if(pd!=color[frx][fry])return 0;
     if(color[frx][fry]==color[tx][ty])return 0;
 
     if(color[tx][ty]==PieceColor::NONE){
@@ -337,8 +338,11 @@ int Server::qchar_to_int(QChar ss){
 
 
 void Server::slot_timeout(){
-    server->send(_white,NetworkData(OPCODE::END_OP,"","TIMEOUT","NONE"));
-    server->send(_black,NetworkData(OPCODE::END_OP,"","TIMEOUT","NONE"));
+    QString winner;
+    if(current_player=="WHITE")winner="BLACK";
+    else winner="WHITE";
+    server->send(_white,NetworkData(OPCODE::END_OP,"","TIMEOUT",winner));
+    server->send(_black,NetworkData(OPCODE::END_OP,"","TIMEOUT",winner));
     dep+="#T";
     restart_game();
 }

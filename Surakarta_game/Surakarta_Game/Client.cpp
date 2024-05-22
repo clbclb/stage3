@@ -7,6 +7,8 @@
 #include <QVBoxLayout>
 #include "ui_Client.h"
 #include<QtNetwork>
+#include"Surakarta_Board.h"
+#include"Surakarta_agent_mine.h"
 
 Client::Client(QWidget *parent)
     :QWidget{parent}, ui(new Ui::Client)
@@ -75,6 +77,7 @@ void Client::receiveData(NetworkData data){
             QMessageBox::about(this,"color","you become black player");
         }
         emit Player_Black();
+        ai_help_black();
     }
     else if(data.op==OPCODE::MOVE_OP){
         dep+=data.data1;
@@ -97,6 +100,7 @@ void Client::receiveData(NetworkData data){
             qDebug()<<" "<<now;
             ans[len++]=now;
         }
+        ans[len]=0;
         emit prt();
         if(data.data3=="BLACK"){
             if(isblack){
@@ -265,6 +269,7 @@ void Client::drawPiece(QPainter &painter,int x,int y)
 void Client::mouseReleaseEvent(QMouseEvent *ev)
 {
     if(!your_turn)return;
+    if(enable_ai)return;
     QPoint pt= ev->pos();
     int xx,yy;
     if(hb-50<pt.x()&&pt.x()<hb+50)xx=0;
@@ -343,12 +348,22 @@ void Client::makemove(int frx,int fry,int tx,int ty){
     your_turn^=1;
     update();
     if(your_turn){
-        if(isblack)emit Player_Black();
-        else emit Player_White();
+        if(isblack){
+            emit Player_Black();
+            ai_help_black();
+        }
+        else{
+            emit Player_White();
+            ai_help_white();
+        }
     }
     else{
-        if(!isblack)emit Player_Black();
-        else emit Player_White();
+        if(!isblack){
+            emit Player_Black();
+        }
+        else{
+            emit Player_White();
+        }
     }
 }
 
@@ -433,9 +448,45 @@ void Client::on_pushButton_clicked()
     emit ip_reset();
 }
 
-
-void Client::on_label_destroyed()
-{
-
+void Client::ai_help_black(){
+    if(!your_turn)return;
+    if(!isblack||!enable_ai)return;
+    QThread::sleep(1);
+    auto board_temp = std::make_shared<SurakartaBoard> (BOARD_SIZE);
+    for(int x=0; x<BOARD_SIZE; x++){
+        for(int y=0; y<BOARD_SIZE; y++){
+            (*board_temp)[x][y] = std::make_shared<SurakartaPiece>();
+            (*board_temp)[x][y]->SetColor(color[x][y]);
+        }
+    }
+    auto game_info=std::make_shared<SurakartaGameInfo>();
+    game_info->current_player_ = PieceColor::BLACK;
+    auto rule_manager = std::make_shared<SurakartaRuleManager>(board_temp,game_info);
+    SurakartaAgentMine agent(board_temp,game_info,rule_manager);
+    auto move = agent.CalculateMove();
+    // QThread::sleep(1);
+    qDebug()<<move.from.x<<" "<<move.from.y<<" "<<move.to.x<<" "<<move.to.y;
+    sendmove(move.from.x,move.from.y,move.to.x,move.to.y);
 }
 
+
+void Client::ai_help_white(){
+    if(!your_turn)return;
+    if(isblack||!enable_ai)return;
+    QThread::sleep(1);
+    auto board_temp = std::make_shared<SurakartaBoard> (BOARD_SIZE);
+    for(int x=0; x<BOARD_SIZE; x++){
+        for(int y=0; y<BOARD_SIZE; y++){
+            (*board_temp)[x][y] = std::make_shared<SurakartaPiece>();
+            (*board_temp)[x][y]->SetColor(color[x][y]);
+        }
+    }
+    auto game_info=std::make_shared<SurakartaGameInfo>();
+    game_info->current_player_ = PieceColor::WHITE;
+    auto rule_manager = std::make_shared<SurakartaRuleManager>(board_temp,game_info);
+    SurakartaAgentMine agent(board_temp,game_info,rule_manager);
+    auto move = agent.CalculateMove();
+    // QThread::sleep(1);
+    qDebug()<<move.from.x<<" "<<move.from.y<<" "<<move.to.x<<" "<<move.to.y;
+    sendmove(move.from.x,move.from.y,move.to.x,move.to.y);
+}

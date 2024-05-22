@@ -21,6 +21,7 @@ public:
    int len;char ans[5100];
    bool black,flag=0;
    bool enable_ai=1;
+   //pay attention : black is the color you choose, while isblack is about the color you get
    
    NetworkSocket *socket;
    explicit Client(QWidget *parent = nullptr);
@@ -49,6 +50,8 @@ public:
    bool check(int x,int y,int dir,int edx,int edy,bool bk);
    int qchar_to_int(QChar ss);
    void messagefunc(QMessageBox &message);
+   void ai_help_black();
+   void ai_help_white();
 
 public slots:
     void receiveData(NetworkData data);
@@ -73,7 +76,6 @@ public:
     quint64 new_port=10086;
 private slots:
     void on_pushButton_clicked();
-    void on_label_destroyed();
 };
 
 #endif // CLIENT_H
