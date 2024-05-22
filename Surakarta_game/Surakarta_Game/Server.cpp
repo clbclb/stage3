@@ -12,11 +12,6 @@ Server::Server(QWidget *parent)
     _white=NULL;
     _black=NULL;
     move_with_no_eat=0;
-    server=new NetworkServer(this);
-    server->listen(QHostAddress::Any,1);
-    connect(server, &NetworkServer::newConnection, this, &Server::slotNewConnection);
-    connect(server, &NetworkServer::receive, this, &Server::receiveData);
-    current_player="BLACK";
     for(int i=0;i<6;i++)
         for(int j=0;j<2;j++)
             color[i][j]=PieceColor::BLACK;
@@ -26,7 +21,20 @@ Server::Server(QWidget *parent)
     for(int i=0;i<6;i++)
         for(int j=4;j<6;j++)
             color[i][j]=PieceColor::WHITE;
+    connect(this,&Server::port_reset,this,[=](){
+        if(flag)return;
+        flag=1;
+        ui->pushButton->hide();
+        ui->textEdit->hide();
+        server=new NetworkServer(this);
+        server->listen(QHostAddress::Any,1);
+        connect(server, &NetworkServer::newConnection, this, &Server::slotNewConnection);
+        connect(server, &NetworkServer::receive, this, &Server::receiveData);
+        current_player="BLACK";
+        update();
+    });
 }
+
 
 Server::~Server(){
     delete ui;
@@ -194,6 +202,7 @@ void Server::restart_game(){
 
 void Server::paintEvent(QPaintEvent *)
 {
+    if(!flag)return;
     QPainter painter(this);
 
     //设置棋盘颜色为浅蓝色
@@ -333,3 +342,28 @@ void Server::slot_timeout(){
     dep+="#T";
     restart_game();
 }
+
+void Server::on_pushButton_clicked()
+{
+    QString ss;
+    ss=ui->textEdit->toPlainText();
+    if(ss.length()){
+        new_port=0;
+        for(int i=0;i<ss.length();i++){
+            int tt;
+            if(ss[i]=='0')tt=0;
+            if(ss[i]=='1')tt=1;
+            if(ss[i]=='2')tt=2;
+            if(ss[i]=='3')tt=3;
+            if(ss[i]=='4')tt=4;
+            if(ss[i]=='5')tt=5;
+            if(ss[i]=='6')tt=6;
+            if(ss[i]=='7')tt=7;
+            if(ss[i]=='8')tt=8;
+            if(ss[i]=='9')tt=9;
+            new_port=new_port*10+tt;
+        }
+    }
+    emit port_reset();
+}
+

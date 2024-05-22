@@ -15,8 +15,10 @@ class Server : public QWidget
 {
     Q_OBJECT
 public:
+    bool flag;
     QString dep;
     int len;char ans[5100];
+    int new_port=10086;
     NetworkServer* server;
     explicit Server(QWidget *parent = nullptr);
     ~Server();
@@ -50,10 +52,14 @@ signals:
     void Player_Black();
     void Player_White();
     void prt();
+    void port_reset();
 public slots:
     void receiveData(QTcpSocket* client, NetworkData data);
     void slotNewConnection();
     void slot_timeout();
+private slots:
+    void on_pushButton_clicked();
+
 private:
     Ui::Server* ui;
 };
