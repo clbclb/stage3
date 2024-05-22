@@ -576,7 +576,7 @@ void Widget::mouseReleaseEvent(QMouseEvent *ev)
         selected_id=-1;
 
         //ai:
-        if(enable_ai)
+        if(enable_ai && gameinfo.current_player_==PieceColor::WHITE)
         {
             auto board_temp = std::make_shared<SurakartaBoard> (BOARD_SIZE);
             for(int x=0; x<BOARD_SIZE; x++){
