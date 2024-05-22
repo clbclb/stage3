@@ -12,11 +12,6 @@ Server::Server(QWidget *parent)
     _white=NULL;
     _black=NULL;
     move_with_no_eat=0;
-    server=new NetworkServer(this);
-    server->listen(QHostAddress::Any,1);
-    connect(server, &NetworkServer::newConnection, this, &Server::slotNewConnection);
-    connect(server, &NetworkServer::receive, this, &Server::receiveData);
-    current_player="BLACK";
     for(int i=0;i<6;i++)
         for(int j=0;j<2;j++)
             color[i][j]=PieceColor::BLACK;
@@ -26,7 +21,20 @@ Server::Server(QWidget *parent)
     for(int i=0;i<6;i++)
         for(int j=4;j<6;j++)
             color[i][j]=PieceColor::WHITE;
+    connect(this,&Server::port_reset,this,[=](){
+        if(flag)return;
+        flag=1;
+        ui->pushButton->hide();
+        ui->textEdit->hide();
+        server=new NetworkServer(this);
+        server->listen(QHostAddress::Any,new_port);
+        connect(server, &NetworkServer::newConnection, this, &Server::slotNewConnection);
+        connect(server, &NetworkServer::receive, this, &Server::receiveData);
+        current_player="BLACK";
+        update();
+    });
 }
+
 
 Server::~Server(){
     delete ui;
@@ -130,8 +138,8 @@ void Server::receiveData(QTcpSocket* client, NetworkData data){
             }
             else if(tt==3){
                 //no capture move
-                server->send(_white,NetworkData(OPCODE::END_OP,"","","NONE"));
-                server->send(_black,NetworkData(OPCODE::END_OP,"","","NONE"));
+                server->send(_white,NetworkData(OPCODE::END_OP,"","STALEMATE","NONE"));
+                server->send(_black,NetworkData(OPCODE::END_OP,"","STALEMATE","NONE"));
                 dep+="#S";
                 restart_game();
             }
@@ -144,9 +152,9 @@ void Server::receiveData(QTcpSocket* client, NetworkData data){
             QString winner;
             if(current_player=="WHITE")winner="BLACK";
             else winner="WHITE";
-            server->send(_white,NetworkData(OPCODE::END_OP,"","",winner));
-            server->send(_black,NetworkData(OPCODE::END_OP,"","",winner));
-            dep+="#S";
+            server->send(_white,NetworkData(OPCODE::END_OP,"","ILLIGAL_MOVE",winner));
+            server->send(_black,NetworkData(OPCODE::END_OP,"","ILLIGAL_MOVE",winner));
+            dep+="#I";
             restart_game();
         }
     }
@@ -172,8 +180,9 @@ void Server::restart_game(){
     for(int i=0;i<dep.length();i++){
         char now=dep[i].toLatin1();
         qDebug()<<" "<<now;
-        ans[++len]=now;
+        ans[len++]=now;
     }
+    ans[len]=0;
     emit prt();
     dep="";
     _white=NULL;
@@ -194,6 +203,7 @@ void Server::restart_game(){
 
 void Server::paintEvent(QPaintEvent *)
 {
+    if(!flag)return;
     QPainter painter(this);
 
     //设置棋盘颜色为浅蓝色
@@ -263,11 +273,11 @@ void Server::makemove(int frx,int fry,int tx,int ty){
 }
 
 bool Server::judgemove(int frx,int fry,int tx,int ty){
-
+    if(frx==tx&&fry==ty)return 0;
     if(frx<0||frx>=6||fry<0||fry>=6)return 0;
     if(tx<0||tx>=6||ty<0||ty>=6)return 0;
-
-    if(color[frx][fry]==PieceColor::NONE)return 0;
+    PieceColor pd=current_player=="WHITE"?PieceColor::WHITE:PieceColor::BLACK;
+    if(pd!=color[frx][fry])return 0;
     if(color[frx][fry]==color[tx][ty])return 0;
 
     if(color[tx][ty]==PieceColor::NONE){
@@ -325,3 +335,39 @@ int Server::qchar_to_int(QChar ss){
     if(ss=='6')return 5;
     return 666;
 }
+
+
+void Server::slot_timeout(){
+    QString winner;
+    if(current_player=="WHITE")winner="BLACK";
+    else winner="WHITE";
+    server->send(_white,NetworkData(OPCODE::END_OP,"","TIMEOUT",winner));
+    server->send(_black,NetworkData(OPCODE::END_OP,"","TIMEOUT",winner));
+    dep+="#T";
+    restart_game();
+}
+
+void Server::on_pushButton_clicked()
+{
+    QString ss;
+    ss=ui->textEdit->toPlainText();
+    if(ss.length()){
+        new_port=0;
+        for(int i=0;i<ss.length();i++){
+            int tt;
+            if(ss[i]=='0')tt=0;
+            if(ss[i]=='1')tt=1;
+            if(ss[i]=='2')tt=2;
+            if(ss[i]=='3')tt=3;
+            if(ss[i]=='4')tt=4;
+            if(ss[i]=='5')tt=5;
+            if(ss[i]=='6')tt=6;
+            if(ss[i]=='7')tt=7;
+            if(ss[i]=='8')tt=8;
+            if(ss[i]=='9')tt=9;
+            new_port=new_port*10+tt;
+        }
+    }
+    emit port_reset();
+}
+

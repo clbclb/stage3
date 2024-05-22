@@ -73,10 +73,11 @@ MainWnd::MainWnd(int gameType,QWidget *parent)
         connect(game,SIGNAL(Player_White()),panel->playerinfo,SLOT(slot_player_is_white()));
         connect(game,SIGNAL(Player_Black()),panel->_clock,SLOT(new_round()));
         connect(game,SIGNAL(Player_White()),panel->_clock,SLOT(new_round()));
-        // connect(panel->_clock,SIGNAL(timeout()),game,SLOT(slot_timeout()));
+        connect(panel->_clock,SIGNAL(timeout()),game,SLOT(slot_timeout()));
         connect(game,&Server::prt,this,[=](){
             qDebug()<<"ok1";
             QDir *temp = new QDir;
+            if(!temp->exists(".\\record"))temp->mkdir(".\\record");
             if(!temp->exists(".\\record\\server"))temp->mkdir(".\\record\\server");
             QFile file(".\\record\\server\\Team_1.txt");
             if(file.open(QIODevice::WriteOnly|QIODevice::Text)){
@@ -112,6 +113,22 @@ MainWnd::MainWnd(int gameType,QWidget *parent)
         connect(game,SIGNAL(Player_Black()),panel->_clock,SLOT(new_round()));
         connect(game,SIGNAL(Player_White()),panel->_clock,SLOT(new_round()));
         // connect(panel->_clock,SIGNAL(timeout()),game,SLOT(slot_timeout()));
+
+        connect(game,&Client::prt,this,[=](){
+            qDebug()<<"ok1";
+            QDir *temp = new QDir;
+            if(!temp->exists(".\\record"))temp->mkdir(".\\record");
+            if(!temp->exists(".\\record\\client"))temp->mkdir(".\\record\\client");
+            QFile file(".\\record\\client\\Team_1.txt");
+            if(file.open(QIODevice::WriteOnly|QIODevice::Text)){
+                qDebug()<<"ok2";
+                file.write(game->ans);
+                file.close();
+            }
+            else{
+                qDebug()<<"cannot open"<<Qt::endl;
+            }
+        });
 
         // game->show();
         QHBoxLayout* hlay =new QHBoxLayout(this);
