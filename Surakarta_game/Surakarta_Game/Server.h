@@ -15,6 +15,8 @@ class Server : public QWidget
 {
     Q_OBJECT
 public:
+    QString dep;
+    int len;char ans[5100];
     NetworkServer* server;
     explicit Server(QWidget *parent = nullptr);
     ~Server();
@@ -47,6 +49,7 @@ public:
 signals:
     void Player_Black();
     void Player_White();
+    void prt();
 public slots:
     void receiveData(QTcpSocket* client, NetworkData data);
     void slotNewConnection();

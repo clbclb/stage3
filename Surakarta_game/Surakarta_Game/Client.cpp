@@ -14,30 +14,6 @@
 Client::Client(QWidget *parent)
     :QWidget{parent}, ui(new Ui::Client)
 {
-    ui->setupUi(this);
-    QMessageBox::StandardButton ret;
-    ret=QMessageBox::question(NULL,"white or black", "你是否想成为黑方（先手）");
-    bool black=0;
-    if(ret==QMessageBox::Yes)black=1;
-    socket = new NetworkSocket(new QTcpSocket(),this);
-    connect(socket,&NetworkSocket::receive,this,&Client::receiveData);
-
-    socket->hello("127.0.0.1",1);
-    this->socket->base()->waitForConnected(2000);
-
-/*
-initialize :
-isblack your_turn
-*/
-
-    if(black){
-        socket->send(NetworkData(OPCODE::READY_OP,"A","BLACK","1"));
-        // QMessageBox::about(this,"send","send ready op");
-    }
-    else{
-        socket->send(NetworkData(OPCODE::READY_OP,"A","WHITE","1"));
-        // QMessageBox::about(this,"send","send ready op");
-    }
     for(int i=0;i<6;i++)
         for(int j=0;j<2;j++)
             color[i][j]=PieceColor::BLACK;
@@ -48,6 +24,40 @@ isblack your_turn
         for(int j=4;j<6;j++)
             color[i][j]=PieceColor::WHITE;
     fromx=-1;
+    ui->setupUi(this);
+    QMessageBox::StandardButton ret;
+    ret=QMessageBox::question(NULL,"white or black", "你是否想成为黑方（先手）");
+    black=0;
+    if(ret==QMessageBox::Yes)black=1;
+    socket = new NetworkSocket(new QTcpSocket(),this);
+    connect(socket,&NetworkSocket::receive,this,&Client::receiveData);
+    connect(this,SIGNAL(ip_reset()),this,SLOT(initgame()));
+}
+
+void Client::initgame(){
+    ui->label->hide();
+    ui->label_2->hide();
+    ui->textEdit->hide();
+    ui->pushButton->hide();
+    ui->textEdit_2->hide();
+
+    socket->hello(new_ip,new_port);
+    this->socket->base()->waitForConnected(2000);
+
+    /*
+initialize :
+isblack your_turn
+*/
+    if(black){
+        socket->send(NetworkData(OPCODE::READY_OP,"A","BLACK","1"));
+        // QMessageBox::about(this,"send","send ready op");
+    }
+    else{
+        socket->send(NetworkData(OPCODE::READY_OP,"A","WHITE","1"));
+        // QMessageBox::about(this,"send","send ready op");
+    }
+    flag=1;
+    update();
 }
 
 Client::~Client(){
@@ -219,6 +229,7 @@ int Client::qchar_to_int(QChar ss){
 
 void Client::paintEvent(QPaintEvent *)
 {
+    if(!flag)return;
     QPainter painter(this);
 
     //设置棋盘颜色为浅蓝色
@@ -433,6 +444,36 @@ void Client::slot_panel_button2_Clicked(){
 
 void Client::on_pushButton_clicked()
 {
-    new_ip=ui->textEdit->toPlainText();
+    if(flag)return;
+    QString ss;
+    ss=ui->textEdit->toPlainText();
+    if(ss.length()){
+        new_ip=ui->textEdit->toPlainText();
+    }
+    ss=ui->textEdit_2->toPlainText();
+    if(ss.length()){
+        new_port=0;
+        for(int i=0;i<ss.length();i++){
+            int tt;
+            if(ss[i]=='0')tt=0;
+            if(ss[i]=='1')tt=1;
+            if(ss[i]=='2')tt=2;
+            if(ss[i]=='3')tt=3;
+            if(ss[i]=='4')tt=4;
+            if(ss[i]=='5')tt=5;
+            if(ss[i]=='6')tt=6;
+            if(ss[i]=='7')tt=7;
+            if(ss[i]=='8')tt=8;
+            if(ss[i]=='9')tt=9;
+            new_port=new_port*10+tt;
+        }
+    }
+    emit ip_reset();
+}
+
+
+void Client::on_label_destroyed()
+{
+
 }
 
