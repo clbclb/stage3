@@ -130,8 +130,8 @@ void Server::receiveData(QTcpSocket* client, NetworkData data){
             }
             else if(tt==3){
                 //no capture move
-                server->send(_white,NetworkData(OPCODE::END_OP,"","","NONE"));
-                server->send(_black,NetworkData(OPCODE::END_OP,"","","NONE"));
+                server->send(_white,NetworkData(OPCODE::END_OP,"","STALEMATE","NONE"));
+                server->send(_black,NetworkData(OPCODE::END_OP,"","STALEMATE","NONE"));
                 dep+="#S";
                 restart_game();
             }
@@ -144,9 +144,9 @@ void Server::receiveData(QTcpSocket* client, NetworkData data){
             QString winner;
             if(current_player=="WHITE")winner="BLACK";
             else winner="WHITE";
-            server->send(_white,NetworkData(OPCODE::END_OP,"","",winner));
-            server->send(_black,NetworkData(OPCODE::END_OP,"","",winner));
-            dep+="#S";
+            server->send(_white,NetworkData(OPCODE::END_OP,"","ILLIGAL_MOVE",winner));
+            server->send(_black,NetworkData(OPCODE::END_OP,"","ILLIGAL_MOVE",winner));
+            dep+="#I";
             restart_game();
         }
     }
@@ -172,7 +172,7 @@ void Server::restart_game(){
     for(int i=0;i<dep.length();i++){
         char now=dep[i].toLatin1();
         qDebug()<<" "<<now;
-        ans[++len]=now;
+        ans[len++]=now;
     }
     emit prt();
     dep="";
@@ -263,7 +263,7 @@ void Server::makemove(int frx,int fry,int tx,int ty){
 }
 
 bool Server::judgemove(int frx,int fry,int tx,int ty){
-
+    if(frx==tx&&fry==ty)return 0;
     if(frx<0||frx>=6||fry<0||fry>=6)return 0;
     if(tx<0||tx>=6||ty<0||ty>=6)return 0;
 
@@ -324,4 +324,12 @@ int Server::qchar_to_int(QChar ss){
     if(ss=='5')return 4;
     if(ss=='6')return 5;
     return 666;
+}
+
+
+void Server::slot_timeout(){
+    server->send(_white,NetworkData(OPCODE::END_OP,"","TIMEOUT","NONE"));
+    server->send(_black,NetworkData(OPCODE::END_OP,"","TIMEOUT","NONE"));
+    dep+="#T";
+    restart_game();
 }

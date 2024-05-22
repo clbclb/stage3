@@ -17,6 +17,8 @@ class Client : public QWidget
 {
    Q_OBJECT
 public:
+   QString dep;
+   int len;char ans[5100];
    bool black,flag=0;
    NetworkSocket *socket;
    explicit Client(QWidget *parent = nullptr);
@@ -55,6 +57,7 @@ signals:
     void Player_Black();
     void Player_White();
     void ip_reset();
+    void prt();
 
 public slots:
     // void slotBack();

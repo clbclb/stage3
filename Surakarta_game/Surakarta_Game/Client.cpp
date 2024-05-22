@@ -11,6 +11,7 @@
 Client::Client(QWidget *parent)
     :QWidget{parent}, ui(new Ui::Client)
 {
+    dep="";
     for(int i=0;i<6;i++)
         for(int j=0;j<2;j++)
             color[i][j]=PieceColor::BLACK;
@@ -76,6 +77,10 @@ void Client::receiveData(NetworkData data){
         emit Player_Black();
     }
     else if(data.op==OPCODE::MOVE_OP){
+        dep+=data.data1;
+        dep+="-";
+        dep+=data.data2;
+        dep+=" ";
         int frx,fry,tx,ty;
         frx=qchar_to_int(data.data1[0]);
         fry=qchar_to_int(data.data1[1]);
@@ -84,6 +89,15 @@ void Client::receiveData(NetworkData data){
         makemove(frx,fry,tx,ty);
     }
     else if(data.op==OPCODE::END_OP){
+        dep+="#";
+        dep+=data.data2[0];
+        len=0;
+        for(int i=0;i<dep.length();i++){
+            char now=dep[i].toLatin1();
+            qDebug()<<" "<<now;
+            ans[len++]=now;
+        }
+        emit prt();
         if(data.data3=="BLACK"){
             if(isblack){
                 QMessageBox message(QMessageBox::Information,"对局结束","你赢了！",QMessageBox::Yes|QMessageBox::No,NULL);
@@ -339,7 +353,7 @@ void Client::makemove(int frx,int fry,int tx,int ty){
 }
 
 bool Client::judgemove(int frx,int fry,int tx,int ty){
-
+    if(frx==tx&&fry==ty)return 0;
     if(frx<0||frx>=6||fry<0||fry>=6)return 0;
     if(tx<0||tx>=6||ty<0||ty>=6)return 0;
 

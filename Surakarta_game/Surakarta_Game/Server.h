@@ -53,6 +53,7 @@ signals:
 public slots:
     void receiveData(QTcpSocket* client, NetworkData data);
     void slotNewConnection();
+    void slot_timeout();
 private:
     Ui::Server* ui;
 };
