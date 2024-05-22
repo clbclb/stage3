@@ -9,6 +9,7 @@
 #include<QHBoxLayout>
 #include <QVBoxLayout>
 #include "eve_game.h"
+#include<QDir>
 
 MainWnd::MainWnd(int gameType,QWidget *parent)
     : QWidget{parent}
@@ -73,6 +74,20 @@ MainWnd::MainWnd(int gameType,QWidget *parent)
         connect(game,SIGNAL(Player_Black()),panel->_clock,SLOT(new_round()));
         connect(game,SIGNAL(Player_White()),panel->_clock,SLOT(new_round()));
         // connect(panel->_clock,SIGNAL(timeout()),game,SLOT(slot_timeout()));
+        connect(game,&Server::prt,this,[=](){
+            qDebug()<<"ok1";
+            QDir *temp = new QDir;
+            if(!temp->exists(".\\record\\server"))temp->mkdir(".\\record\\server");
+            QFile file(".\\record\\server\\Team_1.txt");
+            if(file.open(QIODevice::WriteOnly|QIODevice::Text)){
+                qDebug()<<"ok2";
+                file.write(game->ans);
+                file.close();
+            }
+            else{
+                qDebug()<<"cannot open"<<Qt::endl;
+            }
+        });
 
         // game->show();
         QHBoxLayout* hlay =new QHBoxLayout(this);

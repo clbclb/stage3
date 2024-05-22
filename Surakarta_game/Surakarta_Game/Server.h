@@ -49,6 +49,7 @@ public:
 signals:
     void Player_Black();
     void Player_White();
+    void prt();
 public slots:
     void receiveData(QTcpSocket* client, NetworkData data);
     void slotNewConnection();

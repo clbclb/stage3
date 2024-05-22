@@ -2,7 +2,8 @@
 #include<networkdata.h>
 #include<QPainter>
 #include"ui_Server.h"
-
+#include<QFile>
+#include<QDir>
 Server::Server(QWidget *parent)
     :QWidget{parent},ui(new Ui::Server)
 {
@@ -167,17 +168,13 @@ void Server::receiveData(QTcpSocket* client, NetworkData data){
 }
 
 void Server::restart_game(){
-    // len=0;
-    // for(int i=0;i<dep.length();i++){
-    //     char now=dep[i].toLatin1();
-    //     qDebug()<<" "<<now;
-    //     ans[++len]=now;
-    // }
-    QFile myfile("Team1.txt");
-    if(myfile.open(QFile::WriteOnly|QFile::Truncate)){
-        QTextStream out(&myfile);
-        out<<dep<<Qt::endl<<QObject::tr("go on");
+    len=0;
+    for(int i=0;i<dep.length();i++){
+        char now=dep[i].toLatin1();
+        qDebug()<<" "<<now;
+        ans[++len]=now;
     }
+    emit prt();
     dep="";
     _white=NULL;
     _black=NULL;
