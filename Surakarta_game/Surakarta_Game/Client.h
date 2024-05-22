@@ -17,6 +17,7 @@ class Client : public QWidget
 {
    Q_OBJECT
 public:
+   bool enable_ai=1;
    NetworkSocket *socket;
    explicit Client(QWidget *parent = nullptr);
     ~Client();
