@@ -21,7 +21,7 @@ public:
    int len;char ans[5100];
    bool black,flag=0;
    bool enable_ai=1;
-    bool black,flag=0;
+   
    NetworkSocket *socket;
    explicit Client(QWidget *parent = nullptr);
     ~Client();
