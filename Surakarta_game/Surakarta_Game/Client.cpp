@@ -339,6 +339,7 @@ void Client::sendmove(int frx,int fry,int tx,int ty){
     else{
         socket->send(NetworkData(OPCODE::MOVE_OP,pos_to_data(frx,fry),pos_to_data(tx,ty),""));
     }
+    makemove(frx,fry,tx,ty);
     fromx=-1;
 }
 

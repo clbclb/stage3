@@ -111,13 +111,13 @@ void Server::receiveData(QTcpSocket* client, NetworkData data){
             if(color[tx][ty]==PieceColor::NONE)move_with_no_eat++;
             else move_with_no_eat=0;
             makemove(frx,fry,tx,ty);
-            server->send(_white,NetworkData(OPCODE::MOVE_OP,pos_to_data(frx,fry),pos_to_data(tx,ty),""));
-            server->send(_black,NetworkData(OPCODE::MOVE_OP,pos_to_data(frx,fry),pos_to_data(tx,ty),""));
             if(current_player=="BLACK"){
+                server->send(_white,NetworkData(OPCODE::MOVE_OP,pos_to_data(frx,fry),pos_to_data(tx,ty),""));
                 current_player="WHITE";
                 emit Player_White();
             }
             else{
+                server->send(_black,NetworkData(OPCODE::MOVE_OP,pos_to_data(frx,fry),pos_to_data(tx,ty),""));
                 current_player="BLACK";
                 emit Player_Black();
             }
