@@ -10,7 +10,7 @@ class MainWnd : public QWidget
 {
     Q_OBJECT
 public:
-    explicit MainWnd(int gmaeType,QWidget *parent = nullptr);
+    explicit MainWnd(QString s2="10086",int gameType=0,QWidget *parent = nullptr);
     ~MainWnd();
 
     int _gameType;

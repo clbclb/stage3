@@ -20,11 +20,12 @@ public:
    QString dep;
    int len;char ans[5100];
    bool black,flag=0;
+   //flag means you have create you are ready and you can begin to paint
    bool enable_ai=1;
    //pay attention : black is the color you choose, while isblack is about the color you get
    
    NetworkSocket *socket;
-   explicit Client(QWidget *parent = nullptr);
+   explicit Client(QString s1="127.0.0.1",QString s2="10086",QString s3="BLACK",QWidget *parent = nullptr);
     ~Client();
    bool isblack,your_turn;
    class CtrlPanel* _ctrlpanel;

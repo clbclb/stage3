@@ -20,7 +20,7 @@ public:
     int len;char ans[5100];
     int new_port=10086;
     NetworkServer* server;
-    explicit Server(QWidget *parent = nullptr);
+    explicit Server(QString s1="10086",QWidget *parent = nullptr);
     ~Server();
     QTcpSocket *_white,*_black;
     QString _white_name,_black_name,current_player;

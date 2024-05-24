@@ -10,9 +10,27 @@
 #include"Surakarta_Board.h"
 #include"Surakarta_agent_mine.h"
 
-Client::Client(QWidget *parent)
+Client::Client(QString s1,QString s2,QString s3,QWidget *parent)
     :QWidget{parent}, ui(new Ui::Client)
 {
+    new_ip=s1;
+    new_port=0;
+    for(int i=0;i<s2.length();i++){
+        int tt;
+        if(s2[i]=='0')tt=0;
+        if(s2[i]=='1')tt=1;
+        if(s2[i]=='2')tt=2;
+        if(s2[i]=='3')tt=3;
+        if(s2[i]=='4')tt=4;
+        if(s2[i]=='5')tt=5;
+        if(s2[i]=='6')tt=6;
+        if(s2[i]=='7')tt=7;
+        if(s2[i]=='8')tt=8;
+        if(s2[i]=='9')tt=9;
+        new_port=new_port*10+tt;
+    }
+    if(s3=="BLACK")black=1;
+    else black=0;
     dep="";
     for(int i=0;i<6;i++)
         for(int j=0;j<2;j++)
@@ -25,22 +43,18 @@ Client::Client(QWidget *parent)
             color[i][j]=PieceColor::WHITE;
     fromx=-1;
     ui->setupUi(this);
-    QMessageBox::StandardButton ret;
-    ret=QMessageBox::question(NULL,"white or black", "你是否想成为黑方（先手）");
-    black=0;
-    if(ret==QMessageBox::Yes)black=1;
-    socket = new NetworkSocket(new QTcpSocket(),this);
-    connect(socket,&NetworkSocket::receive,this,&Client::receiveData);
-    connect(this,SIGNAL(ip_reset()),this,SLOT(initgame()));
-}
-
-void Client::initgame(){
     ui->label->hide();
     ui->label_2->hide();
     ui->textEdit->hide();
     ui->pushButton->hide();
     ui->textEdit_2->hide();
-
+    // QMessageBox::StandardButton ret;
+    // ret=QMessageBox::question(NULL,"white or black", "你是否想成为黑方（先手）");
+    // black=0;
+    // if(ret==QMessageBox::Yes)black=1;
+    socket = new NetworkSocket(new QTcpSocket(),this);
+    connect(socket,&NetworkSocket::receive,this,&Client::receiveData);
+    // connect(this,SIGNAL(ip_reset()),this,SLOT(initgame()));
     socket->hello(new_ip,new_port);
     this->socket->base()->waitForConnected(2000);
 
@@ -58,6 +72,10 @@ isblack your_turn
     }
     flag=1;
     update();
+}
+
+void Client::initgame(){
+
 }
 
 Client::~Client(){
@@ -339,11 +357,16 @@ void Client::sendmove(int frx,int fry,int tx,int ty){
     else{
         socket->send(NetworkData(OPCODE::MOVE_OP,pos_to_data(frx,fry),pos_to_data(tx,ty),""));
     }
+    dep+=pos_to_data(frx,fry);
+    dep+="-";
+    dep+=pos_to_data(tx,ty);
+    dep+=" ";
     makemove(frx,fry,tx,ty);
     fromx=-1;
 }
 
 void Client::makemove(int frx,int fry,int tx,int ty){
+    if(!judgemove(frx,fry,tx,ty))return;
     color[tx][ty]=color[frx][fry];
     color[frx][fry]=PieceColor::NONE;
     your_turn^=1;

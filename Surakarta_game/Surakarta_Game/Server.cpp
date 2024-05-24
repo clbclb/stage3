@@ -4,11 +4,36 @@
 #include"ui_Server.h"
 #include<QFile>
 #include<QDir>
-Server::Server(QWidget *parent)
+Server::Server(QString s1,QWidget *parent)
     :QWidget{parent},ui(new Ui::Server)
 {
-    dep="";
     ui->setupUi(this);
+    ui->pushButton->hide();
+    ui->textEdit->hide();
+    new_port=0;
+    for(int i=0;i<s1.length();i++){
+        int tt;
+        if(s1[i]=='0')tt=0;
+        if(s1[i]=='1')tt=1;
+        if(s1[i]=='2')tt=2;
+        if(s1[i]=='3')tt=3;
+        if(s1[i]=='4')tt=4;
+        if(s1[i]=='5')tt=5;
+        if(s1[i]=='6')tt=6;
+        if(s1[i]=='7')tt=7;
+        if(s1[i]=='8')tt=8;
+        if(s1[i]=='9')tt=9;
+        new_port=new_port*10+tt;
+    }
+    dep="";
+
+    // QString tt="";
+    // while(test_num){
+    //     int num=test_num%10;
+    //     test_num/=10;
+    //     tt=(QChar)(num+'0')+tt;
+    // }
+    // ui->label->setText(tt);
     _white=NULL;
     _black=NULL;
     move_with_no_eat=0;
@@ -21,18 +46,16 @@ Server::Server(QWidget *parent)
     for(int i=0;i<6;i++)
         for(int j=4;j<6;j++)
             color[i][j]=PieceColor::WHITE;
-    connect(this,&Server::port_reset,this,[=](){
-        if(flag)return;
+    // connect(this,&Server::port_reset,this,[=](){
+    //     if(flag)return;
         flag=1;
-        ui->pushButton->hide();
-        ui->textEdit->hide();
         server=new NetworkServer(this);
         server->listen(QHostAddress::Any,new_port);
         connect(server, &NetworkServer::newConnection, this, &Server::slotNewConnection);
         connect(server, &NetworkServer::receive, this, &Server::receiveData);
         current_player="BLACK";
         update();
-    });
+    // });
 }
 
 
@@ -349,25 +372,25 @@ void Server::slot_timeout(){
 
 void Server::on_pushButton_clicked()
 {
-    QString ss;
-    ss=ui->textEdit->toPlainText();
-    if(ss.length()){
-        new_port=0;
-        for(int i=0;i<ss.length();i++){
-            int tt;
-            if(ss[i]=='0')tt=0;
-            if(ss[i]=='1')tt=1;
-            if(ss[i]=='2')tt=2;
-            if(ss[i]=='3')tt=3;
-            if(ss[i]=='4')tt=4;
-            if(ss[i]=='5')tt=5;
-            if(ss[i]=='6')tt=6;
-            if(ss[i]=='7')tt=7;
-            if(ss[i]=='8')tt=8;
-            if(ss[i]=='9')tt=9;
-            new_port=new_port*10+tt;
-        }
-    }
-    emit port_reset();
+    // QString ss;
+    // ss=ui->textEdit->toPlainText();
+    // if(ss.length()){
+    //     new_port=0;
+    //     for(int i=0;i<ss.length();i++){
+    //         int tt;
+    //         if(ss[i]=='0')tt=0;
+    //         if(ss[i]=='1')tt=1;
+    //         if(ss[i]=='2')tt=2;
+    //         if(ss[i]=='3')tt=3;
+    //         if(ss[i]=='4')tt=4;
+    //         if(ss[i]=='5')tt=5;
+    //         if(ss[i]=='6')tt=6;
+    //         if(ss[i]=='7')tt=7;
+    //         if(ss[i]=='8')tt=8;
+    //         if(ss[i]=='9')tt=9;
+    //         new_port=new_port*10+tt;
+    //     }
+    // }
+    // emit port_reset();
 }
 
