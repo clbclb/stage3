@@ -43,7 +43,7 @@ public:
     const int dy[4]={-1,1,0,0};
     bool check(int x,int y,int dir,int edx,int edy,bool bk);
     int qchar_to_int(QChar ss);
-    int judgeend();
+    void judgeend(int &s1,int &s2);
     void restart_game();
 
     int move_with_no_eat;

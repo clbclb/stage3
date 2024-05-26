@@ -67,21 +67,16 @@ void Server::slotNewConnection(){
     // QMessageBox::about(this,"ooo","congratulations you build a new connection");
 }
 
-int Server::judgeend(){
-    bool exist_white=0;
+void Server::judgeend(int &sum1,int &sum2){
+    sum1=0,sum2=0;
     for(int i=0;i<6;i++)
         for(int j=0;j<6;j++)
             if(color[i][j]==PieceColor::WHITE)
-                exist_white=1;
-    if(!exist_white)return 1;
-    bool exist_black=0;
+                sum1++;
     for(int i=0;i<6;i++)
         for(int j=0;j<6;j++)
             if(color[i][j]==PieceColor::BLACK)
-                exist_black=1;
-    if(!exist_black)return 2;
-    if(move_with_no_eat>80)return 3;
-    return 4;
+                sum2++;
 }
 
 void Server::receiveData(QTcpSocket* client, NetworkData data){
@@ -116,8 +111,8 @@ void Server::receiveData(QTcpSocket* client, NetworkData data){
                 _black=client;
                 _black_name=data.data1;
             }
-            server->send(_white,NetworkData(OPCODE::READY_OP,_black_name,"BLACK",room_id));
-            server->send(_black,NetworkData(OPCODE::READY_OP,_white_name,"WHITE",room_id));
+            server->send(_white,NetworkData(OPCODE::READY_OP,_black_name,"WHITE",room_id));
+            server->send(_black,NetworkData(OPCODE::READY_OP,_white_name,"BLACK",room_id));
             emit Player_Black();
         }
     }
@@ -144,27 +139,43 @@ void Server::receiveData(QTcpSocket* client, NetworkData data){
                 current_player="BLACK";
                 emit Player_Black();
             }
-            int tt=judgeend();
-            if(tt==1){
+            int sum_white,sum_black;
+            judgeend(sum_white,sum_black);
+            if(!sum_white){
                 //black eat all white
-                server->send(_white,NetworkData(OPCODE::END_OP,"","CHECKMATE","BLACK"));
-                server->send(_black,NetworkData(OPCODE::END_OP,"","CHECKMATE","BLACK"));
+                server->send(_white,NetworkData(OPCODE::END_OP,"",QString::fromStdString(std::to_string((int)SurakartaEndReason::CHECKMATE)),QString::fromStdString(std::to_string((int)PieceColor::BLACK))));
+                server->send(_black,NetworkData(OPCODE::END_OP,"",QString::fromStdString(std::to_string((int)SurakartaEndReason::CHECKMATE)),QString::fromStdString(std::to_string((int)PieceColor::BLACK))));
                 dep+="#C";
                 restart_game();
             }
-            else if(tt==2){
+            else if(!sum_black){
                 //white eat all black
-                server->send(_white,NetworkData(OPCODE::END_OP,"","CHECKMATE","WHITE"));
-                server->send(_black,NetworkData(OPCODE::END_OP,"","CHECKMATE","WHITE"));
+                server->send(_white,NetworkData(OPCODE::END_OP,"",QString::fromStdString(std::to_string((int)SurakartaEndReason::CHECKMATE)),QString::fromStdString(std::to_string((int)PieceColor::WHITE))));
+                server->send(_black,NetworkData(OPCODE::END_OP,"",QString::fromStdString(std::to_string((int)SurakartaEndReason::CHECKMATE)),QString::fromStdString(std::to_string((int)PieceColor::WHITE))));
                 dep+="#C";
                 restart_game();
             }
-            else if(tt==3){
+            else if(move_with_no_eat>80){
                 //no capture move
-                server->send(_white,NetworkData(OPCODE::END_OP,"","STALEMATE","NONE"));
-                server->send(_black,NetworkData(OPCODE::END_OP,"","STALEMATE","NONE"));
-                dep+="#S";
-                restart_game();
+                //you should also judge which player have more pieces
+                if(sum_white==sum_black){
+                    server->send(_white,NetworkData(OPCODE::END_OP,"","STALEMATE",QString::fromStdString(std::to_string((int)PieceColor::NONE))));
+                    server->send(_black,NetworkData(OPCODE::END_OP,"","STALEMATE",QString::fromStdString(std::to_string((int)PieceColor::NONE))));
+                    dep+="#S";
+                    restart_game();
+                }
+                else if(sum_white>sum_black){
+                    server->send(_white,NetworkData(OPCODE::END_OP,"",QString::fromStdString(std::to_string((int)SurakartaEndReason::CHECKMATE)),QString::fromStdString(std::to_string((int)PieceColor::WHITE))));
+                    server->send(_black,NetworkData(OPCODE::END_OP,"",QString::fromStdString(std::to_string((int)SurakartaEndReason::CHECKMATE)),QString::fromStdString(std::to_string((int)PieceColor::WHITE))));
+                    dep+="#C";
+                    restart_game();
+                }
+                else{
+                    server->send(_white,NetworkData(OPCODE::END_OP,"",QString::fromStdString(std::to_string((int)SurakartaEndReason::CHECKMATE)),QString::fromStdString(std::to_string((int)PieceColor::BLACK))));
+                    server->send(_black,NetworkData(OPCODE::END_OP,"",QString::fromStdString(std::to_string((int)SurakartaEndReason::CHECKMATE)),QString::fromStdString(std::to_string((int)PieceColor::BLACK))));
+                    dep+="#C";
+                    restart_game();
+                }
             }
             else{
                 //move on
@@ -173,10 +184,10 @@ void Server::receiveData(QTcpSocket* client, NetworkData data){
         else{
             //end
             QString winner;
-            if(current_player=="WHITE")winner="BLACK";
-            else winner="WHITE";
-            server->send(_white,NetworkData(OPCODE::END_OP,"","ILLIGAL_MOVE",winner));
-            server->send(_black,NetworkData(OPCODE::END_OP,"","ILLIGAL_MOVE",winner));
+            if(current_player=="WHITE")winner=QString::fromStdString(std::to_string((int)PieceColor::BLACK));
+            else winner=QString::fromStdString(std::to_string((int)PieceColor::WHITE));
+            server->send(_white,NetworkData(OPCODE::END_OP,"",QString::fromStdString(std::to_string((int)SurakartaEndReason::ILLIGAL_MOVE)),winner));
+            server->send(_black,NetworkData(OPCODE::END_OP,"",QString::fromStdString(std::to_string((int)SurakartaEndReason::ILLIGAL_MOVE)),winner));
             dep+="#I";
             restart_game();
         }
@@ -186,12 +197,12 @@ void Server::receiveData(QTcpSocket* client, NetworkData data){
     }
     else if(data.op==OPCODE::RESIGN_OP){
         if(_white==client){
-            server->send(_white,NetworkData(OPCODE::END_OP,"","RESIGN","BLACK"));
-            server->send(_black,NetworkData(OPCODE::END_OP,"","RESIGN","BLACK"));
+            server->send(_white,NetworkData(OPCODE::END_OP,"",QString::fromStdString(std::to_string((int)SurakartaEndReason::RESIGN)),QString::fromStdString(std::to_string((int)PieceColor::BLACK))));
+            server->send(_black,NetworkData(OPCODE::END_OP,"",QString::fromStdString(std::to_string((int)SurakartaEndReason::RESIGN)),QString::fromStdString(std::to_string((int)PieceColor::BLACK))));
         }
         else{
-            server->send(_white,NetworkData(OPCODE::END_OP,"","RESIGN","WHITE"));
-            server->send(_black,NetworkData(OPCODE::END_OP,"","RESIGN","WHITE"));
+            server->send(_white,NetworkData(OPCODE::END_OP,"",QString::fromStdString(std::to_string((int)SurakartaEndReason::RESIGN)),QString::fromStdString(std::to_string((int)PieceColor::WHITE))));
+            server->send(_black,NetworkData(OPCODE::END_OP,"",QString::fromStdString(std::to_string((int)SurakartaEndReason::RESIGN)),QString::fromStdString(std::to_string((int)PieceColor::WHITE))));
         }
         dep+="#R";
         restart_game();
@@ -362,10 +373,10 @@ int Server::qchar_to_int(QChar ss){
 
 void Server::slot_timeout(){
     QString winner;
-    if(current_player=="WHITE")winner="BLACK";
-    else winner="WHITE";
-    server->send(_white,NetworkData(OPCODE::END_OP,"","TIMEOUT",winner));
-    server->send(_black,NetworkData(OPCODE::END_OP,"","TIMEOUT",winner));
+    if(current_player=="WHITE")winner=QString::fromStdString(std::to_string((int)PieceColor::BLACK));
+    else winner=QString::fromStdString(std::to_string((int)PieceColor::WHITE));
+    server->send(_white,NetworkData(OPCODE::END_OP,"",QString::fromStdString(std::to_string((int)SurakartaEndReason::TIMEOUT)),winner));
+    server->send(_black,NetworkData(OPCODE::END_OP,"",QString::fromStdString(std::to_string((int)SurakartaEndReason::TIMEOUT)),winner));
     dep+="#T";
     restart_game();
 }

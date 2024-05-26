@@ -26,12 +26,13 @@ public:
     QLabel *label;
     QLabel *label_2;
     QTextEdit *textEdit_2;
+    QLabel *label_3;
 
     void setupUi(QWidget *Client)
     {
         if (Client->objectName().isEmpty())
             Client->setObjectName("Client");
-        Client->resize(858, 559);
+        Client->resize(1093, 831);
         textEdit = new QTextEdit(Client);
         textEdit->setObjectName("textEdit");
         textEdit->setGeometry(QRect(80, 140, 261, 51));
@@ -47,6 +48,14 @@ public:
         textEdit_2 = new QTextEdit(Client);
         textEdit_2->setObjectName("textEdit_2");
         textEdit_2->setGeometry(QRect(80, 260, 271, 51));
+        label_3 = new QLabel(Client);
+        label_3->setObjectName("label_3");
+        label_3->setGeometry(QRect(10, 460, 191, 21));
+        label_3->setMinimumSize(QSize(0, 21));
+        label_3->setMaximumSize(QSize(16777215, 21));
+        QFont font;
+        font.setPointSize(20);
+        label_3->setFont(font);
 
         retranslateUi(Client);
 
@@ -59,6 +68,7 @@ public:
         pushButton->setText(QCoreApplication::translate("Client", "ok", nullptr));
         label->setText(QCoreApplication::translate("Client", "reset your ip", nullptr));
         label_2->setText(QCoreApplication::translate("Client", "reset your port", nullptr));
+        label_3->setText(QCoreApplication::translate("Client", "TextLabel", nullptr));
     } // retranslateUi
 
 };

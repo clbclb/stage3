@@ -45,6 +45,7 @@ Client::Client(QString s1,QString s2,QString s3,QWidget *parent)
     ui->setupUi(this);
     ui->label->hide();
     ui->label_2->hide();
+    ui->label_3->hide();
     ui->textEdit->hide();
     ui->pushButton->hide();
     ui->textEdit_2->hide();
@@ -84,15 +85,19 @@ Client::~Client(){
 
 void Client::receiveData(NetworkData data){
     if(data.op==OPCODE::READY_OP){
-        if(data.data2=="BLACK"){
+        if(data.data2=="WHITE"){
             isblack=0;
             your_turn=0;
-            QMessageBox::about(this,"color","you become white player");
+            ui->label_3->show();
+            ui->label_3->setText("You:WHITE");
+            // QMessageBox::about(this,"color","you become white player");
         }
         else{
             isblack=1;
             your_turn=1;
-            QMessageBox::about(this,"color","you become black player");
+            // QMessageBox::about(this,"color","you become black player");
+            ui->label_3->show();
+            ui->label_3->setText("You:BLACK");
         }
         emit Player_Black();
         ai_help_black();
@@ -111,7 +116,21 @@ void Client::receiveData(NetworkData data){
     }
     else if(data.op==OPCODE::END_OP){
         dep+="#";
-        dep+=data.data2[0];
+        if(data.data2==QString::fromStdString(std::to_string((int)SurakartaEndReason::CHECKMATE))){
+            dep+="C";
+        }
+        else if(data.data2==QString::fromStdString(std::to_string((int)SurakartaEndReason::STALEMATE))){
+            dep+="S";
+        }
+        else if(data.data2==QString::fromStdString(std::to_string((int)SurakartaEndReason::ILLIGAL_MOVE))){
+            dep+="I";
+        }
+        else if(data.data2==QString::fromStdString(std::to_string((int)SurakartaEndReason::RESIGN))){
+            dep+="R";
+        }
+        else if(data.data2==QString::fromStdString(std::to_string((int)SurakartaEndReason::TIMEOUT))){
+            dep+="T";
+        }
         len=0;
         for(int i=0;i<dep.length();i++){
             char now=dep[i].toLatin1();
@@ -120,7 +139,7 @@ void Client::receiveData(NetworkData data){
         }
         ans[len]=0;
         emit prt();
-        if(data.data3=="BLACK"){
+        if(data.data3==QString::fromStdString(std::to_string((int)PieceColor::BLACK))){
             if(isblack){
                 QMessageBox message(QMessageBox::Information,"对局结束","你赢了！",QMessageBox::Yes|QMessageBox::No,NULL);
                 message.setButtonText(QMessageBox::Yes,"再来一局");
@@ -134,7 +153,7 @@ void Client::receiveData(NetworkData data){
                 messagefunc(message);
             }
         }
-        else if(data.data3=="WHITE"){
+        else if(data.data3==QString::fromStdString(std::to_string((int)PieceColor::WHITE))){
             if(!isblack){
                 QMessageBox message(QMessageBox::Information,"对局结束","你赢了！",QMessageBox::Yes|QMessageBox::No,NULL);
                 message.setButtonText(QMessageBox::Yes,"再来一局");
@@ -162,15 +181,6 @@ void Client::messagefunc(QMessageBox &message)
 {
     if(message.exec()==QMessageBox::Yes)//再来一局
     {
-        QMessageBox::StandardButton ret;
-        ret=QMessageBox::question(NULL,"white or black", "你是否想成为黑方（先手）");
-        bool black=0;
-        if(ret==QMessageBox::Yes)black=1;
-        /*
-initialize :
-isblack your_turn
-*/
-
         if(black){
             socket->send(NetworkData(OPCODE::READY_OP,"A","BLACK","1"));
             // QMessageBox::about(this,"send","send ready op");
@@ -179,6 +189,8 @@ isblack your_turn
             socket->send(NetworkData(OPCODE::READY_OP,"A","WHITE","1"));
             // QMessageBox::about(this,"send","send ready op");
         }
+        flag=1;
+        update();
         for(int i=0;i<6;i++)
             for(int j=0;j<2;j++)
                 color[i][j]=PieceColor::BLACK;
@@ -255,6 +267,8 @@ void Client::paintEvent(QPaintEvent *)
     for(int i=0;i<6;i++)
         for(int j=0;j<6;j++)
             drawPiece(painter,i,j);
+    ui->label_3->hide();
+    ui->label_3->show();
 }
 
 void Client::drawPiece(QPainter &painter,int x,int y)

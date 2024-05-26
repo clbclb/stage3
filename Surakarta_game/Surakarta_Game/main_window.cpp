@@ -11,7 +11,7 @@
 #include "eve_game.h"
 #include<QDir>
 
-MainWnd::MainWnd(QString s1,int gameType,QWidget *parent)
+MainWnd::MainWnd(QString s1,QString s2,QString s3,int gameType,QWidget *parent)
     : QWidget{parent}
 {
     _gameType=gameType;
@@ -62,7 +62,7 @@ MainWnd::MainWnd(QString s1,int gameType,QWidget *parent)
     }
     else if(_gameType==2)
     {
-        Server* game = new Server(s1);
+        Server* game = new Server(s2);
         CtrlPanel* panel = new CtrlPanel;
 
         // connect(panel->_buttons[0],SIGNAL(clicked()),game,SLOT(slot_panel_button0_Clicked()));
@@ -101,7 +101,7 @@ MainWnd::MainWnd(QString s1,int gameType,QWidget *parent)
     }
     else if(_gameType==3)
     {
-        Client* game = new Client(s1);
+        Client* game = new Client(s1,s2,s3);
         CtrlPanel* panel = new CtrlPanel;
 
         // connect(panel->_buttons[0],SIGNAL(clicked()),game,SLOT(slot_panel_button0_Clicked()));
