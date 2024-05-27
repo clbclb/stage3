@@ -10,6 +10,8 @@
 SurakartaMove SurakartaAgentMine::CalculateMove() {
     // TODO: Implement your own ai here.
     // 生成from集与to集
+    std::vector<SurakartaMove> random_move1;
+    std::vector<SurakartaMove> random_move2;
     std::vector<SurakartaPosition> from;
     std::vector<SurakartaPosition> to;
     for (unsigned int i = 0; i < board_size_; i++) {
@@ -22,8 +24,8 @@ SurakartaMove SurakartaAgentMine::CalculateMove() {
             }
         }
     }
-    // std::shuffle(from.begin(), from.end(), GlobalRandomGenerator::getInstance());
-    // std::shuffle(to.begin(), to.end(), GlobalRandomGenerator::getInstance()); //time saving
+    std::shuffle(from.begin(), from.end(), GlobalRandomGenerator::getInstance());
+    std::shuffle(to.begin(), to.end(), GlobalRandomGenerator::getInstance()); //time saving
 
     // 获得对手棋子位置,用于判断移动后是否会被吃
     std::vector<SurakartaPosition> opponent;
@@ -68,6 +70,7 @@ SurakartaMove SurakartaAgentMine::CalculateMove() {
                             }
                             if (capflag_of_being_captured == 0) {
                                 rd_move1 = move;
+                                random_move1.push_back(move);
                                 capflag_of_being_captured = 1;
                             }
                         }
@@ -86,22 +89,30 @@ SurakartaMove SurakartaAgentMine::CalculateMove() {
                                 (*board_)[p1.x][p1.y]->SetColor(origin_from);
                                 if (reason_of_opponent != SurakartaIllegalMoveReason::LEGAL_CAPTURE_MOVE && capflag_of_being_captured == 0 && nonflag_of_not_captured == 0) {
                                     rd_move1 = move;
+                                    random_move1.push_back(move);
                                     nonflag_of_not_captured = 1;
                                 }
                             }
                             if (capflag_of_being_captured == 0 && nonflag_of_not_captured == 0) {
                                 rd_move1 = move;
+                                random_move1.push_back(move);
                             }
                         }
                     }
                 }
             }
             if (capflag_of_being_captured != 0 || nonflag_of_not_captured != 0)
-                return rd_move1;  // 经移动后该子不会被吃
+                // return rd_move1;  // 经移动后该子不会被吃
+            {
+                std::shuffle(random_move1.begin(),random_move1.end(),GlobalRandomGenerator::getInstance());
+                return random_move1[0];
+            }
             else
                 break;  // 该子无论如何都会被吃，不移动该子，枚举下一个子，尝试保护它
         }
     }
+
+
 
     // 只有所有子移动前都不会被吃或都无法避免被吃的情况下才会到这里并继续进行
     //  优先选择能吃子且不被吃的MOVE，其次选能吃子但会被吃的MOVE，再次选不能吃子但不会被吃的MOVE，最后选不能吃子且会被吃的MOVE <-优先级
@@ -129,6 +140,7 @@ SurakartaMove SurakartaAgentMine::CalculateMove() {
                 }
                 if (capflag_of_being_captured == 0) {  // 记录第一个可吃对方子且会被吃掉的情况，不再记录之后相同的情况
                     rd_move2 = move;
+                    random_move2.push_back(move);
                     capflag_of_being_captured = 1;
                 }
             } else if (reason == SurakartaIllegalMoveReason::LEGAL_NON_CAPTURE_MOVE) {  // 当前被枚举我方子没有吃掉对方子的机会
@@ -145,14 +157,17 @@ SurakartaMove SurakartaAgentMine::CalculateMove() {
                     (*board_)[p1.x][p1.y]->SetColor(origin_from);
                     if (reason_of_opponent != SurakartaIllegalMoveReason::LEGAL_CAPTURE_MOVE && capflag_of_being_captured == 0 && nonflag_of_not_captured == 0) {  // 记录第一个不会吃掉对方子且移动后不会被对方子吃掉的情况，不再记录之后相同的情况，且优先级高于此种情况的情况出现后也不再记录此种情况
                         rd_move2 = move;
+                        random_move2.push_back(move);
                         nonflag_of_not_captured = 1;
                     }
                 }
                 if (capflag_of_being_captured == 0 && nonflag_of_not_captured == 0) {  // 优先级高于此种情况（移动不会吃掉对方子且会被对方子吃掉，出现概率极低但确实会出现）的情况出现后，不再记录此种情况
                     rd_move2 = move;
+                    random_move2.push_back(move);
                 }
             }
         }
     }
-    return rd_move2;
+    std::shuffle(random_move2.begin(),random_move2.end(),GlobalRandomGenerator::getInstance());
+    return random_move2[0];
 }
