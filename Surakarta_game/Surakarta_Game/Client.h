@@ -53,6 +53,8 @@ public:
    void messagefunc(QMessageBox &message);
    void ai_help_black();
    void ai_help_white();
+   int move_with_no_eat;
+   void judgeend(int &s1,int &s2);
 
 public slots:
     void receiveData(NetworkData data);

@@ -48,13 +48,13 @@ Server::Server(QString s1,QWidget *parent)
             color[i][j]=PieceColor::WHITE;
     // connect(this,&Server::port_reset,this,[=](){
     //     if(flag)return;
-        flag=1;
-        server=new NetworkServer(this);
-        server->listen(QHostAddress::Any,new_port);
-        connect(server, &NetworkServer::newConnection, this, &Server::slotNewConnection);
-        connect(server, &NetworkServer::receive, this, &Server::receiveData);
-        current_player="BLACK";
-        update();
+    flag=1;
+    server=new NetworkServer(this);
+    server->listen(QHostAddress::Any,new_port);
+    connect(server, &NetworkServer::newConnection, this, &Server::slotNewConnection);
+    connect(server, &NetworkServer::receive, this, &Server::receiveData);
+    current_player="BLACK";
+    update();
     // });
 }
 
@@ -159,8 +159,8 @@ void Server::receiveData(QTcpSocket* client, NetworkData data){
                 //no capture move
                 //you should also judge which player have more pieces
                 if(sum_white==sum_black){
-                    server->send(_white,NetworkData(OPCODE::END_OP,"","STALEMATE",QString::fromStdString(std::to_string((int)PieceColor::NONE))));
-                    server->send(_black,NetworkData(OPCODE::END_OP,"","STALEMATE",QString::fromStdString(std::to_string((int)PieceColor::NONE))));
+                    server->send(_white,NetworkData(OPCODE::END_OP,"",QString::fromStdString(std::to_string((int)SurakartaEndReason::STALEMATE)),QString::fromStdString(std::to_string((int)PieceColor::NONE))));
+                    server->send(_black,NetworkData(OPCODE::END_OP,"",QString::fromStdString(std::to_string((int)SurakartaEndReason::STALEMATE)),QString::fromStdString(std::to_string((int)PieceColor::NONE))));
                     dep+="#S";
                     restart_game();
                 }

@@ -13,6 +13,7 @@
 Client::Client(QString s1,QString s2,QString s3,QWidget *parent)
     :QWidget{parent}, ui(new Ui::Client)
 {
+    move_with_no_eat=0;
     new_ip=s1;
     new_port=0;
     for(int i=0;i<s2.length();i++){
@@ -83,6 +84,18 @@ Client::~Client(){
     delete ui;
 }
 
+void Client::judgeend(int &sum1,int &sum2){
+    sum1=0,sum2=0;
+    for(int i=0;i<6;i++)
+        for(int j=0;j<6;j++)
+            if(color[i][j]==PieceColor::WHITE)
+                sum1++;
+    for(int i=0;i<6;i++)
+        for(int j=0;j<6;j++)
+            if(color[i][j]==PieceColor::BLACK)
+                sum2++;
+}
+
 void Client::receiveData(NetworkData data){
     if(data.op==OPCODE::READY_OP){
         if(data.data2=="WHITE"){
@@ -113,6 +126,7 @@ void Client::receiveData(NetworkData data){
         tx=qchar_to_int(data.data2[0]);
         ty=qchar_to_int(data.data2[1]);
         makemove(frx,fry,tx,ty);
+        QThread::sleep(1);
     }
     else if(data.op==OPCODE::END_OP){
         dep+="#";
@@ -190,6 +204,7 @@ void Client::messagefunc(QMessageBox &message)
             // QMessageBox::about(this,"send","send ready op");
         }
         flag=1;
+        move_with_no_eat=0;
         update();
         for(int i=0;i<6;i++)
             for(int j=0;j<2;j++)
@@ -381,6 +396,7 @@ void Client::sendmove(int frx,int fry,int tx,int ty){
 
 void Client::makemove(int frx,int fry,int tx,int ty){
     if(!judgemove(frx,fry,tx,ty))return;
+    if(color[tx][ty]!=PieceColor::NONE)move_with_no_eat++;
     color[tx][ty]=color[frx][fry];
     color[frx][fry]=PieceColor::NONE;
     your_turn^=1;
@@ -487,6 +503,9 @@ void Client::on_pushButton_clicked()
 }
 
 void Client::ai_help_black(){
+    int s1,s2;
+    judgeend(s1,s2);
+    if(!s1||!s2||move_with_no_eat>80)return;
     if(!your_turn)return;
     if(!isblack||!enable_ai)return;
     QThread::sleep(1);
@@ -509,6 +528,9 @@ void Client::ai_help_black(){
 
 
 void Client::ai_help_white(){
+    int s1,s2;
+    judgeend(s1,s2);
+    if(!s1||!s2||move_with_no_eat>80)return;
     if(!your_turn)return;
     if(isblack||!enable_ai)return;
     QThread::sleep(1);

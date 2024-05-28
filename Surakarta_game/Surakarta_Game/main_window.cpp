@@ -77,9 +77,9 @@ MainWnd::MainWnd(QString s1,QString s2,QString s3,int gameType,QWidget *parent)
         connect(game,&Server::prt,this,[=](){
             qDebug()<<"ok1";
             QDir *temp = new QDir;
-            if(!temp->exists(".\\record"))temp->mkdir(".\\record");
-            if(!temp->exists(".\\record\\server"))temp->mkdir(".\\record\\server");
-            QFile file(".\\record\\server\\Team_1.txt");
+            if(!temp->exists("./record"))temp->mkdir("./record");
+            if(!temp->exists("./record/server"))temp->mkdir("./record/server");
+            QFile file("./record/server/Team_1.txt");
             if(file.open(QIODevice::WriteOnly|QIODevice::Text)){
                 qDebug()<<"ok2";
                 file.write(game->ans);
@@ -117,9 +117,9 @@ MainWnd::MainWnd(QString s1,QString s2,QString s3,int gameType,QWidget *parent)
         connect(game,&Client::prt,this,[=](){
             qDebug()<<"ok1";
             QDir *temp = new QDir;
-            if(!temp->exists(".\\record"))temp->mkdir(".\\record");
-            if(!temp->exists(".\\record\\client"))temp->mkdir(".\\record\\client");
-            QFile file(".\\record\\client\\Team_1.txt");
+            if(!temp->exists("./record"))temp->mkdir("./record");
+            if(!temp->exists("./record/client"))temp->mkdir("./record/client");
+            QFile file("./record/client/Team_1.txt");
             if(file.open(QIODevice::WriteOnly|QIODevice::Text)){
                 qDebug()<<"ok2";
                 file.write(game->ans);
